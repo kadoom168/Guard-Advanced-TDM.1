@@ -1,45 +1,157 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Guard: Advanced TDM</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    canvas {
+      display: block;
+      background: #333;
+    }
+    #ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 14px;
+      z-index: 2;
+    }
+  </style>
 </head>
 <body>
-  <div id="mainMenu" class="menu">
-    <h1>Guard: Advanced TDM</h1>
-    <button onclick="startGame()">Yeni Oyun</button>
-    <button onclick="toggleSettings()">Ayarlar</button>
-    <button onclick="toggleAbout()">Hakkında</button>
+  <div id="ui">
+    <div id="level">Seviye: 1</div>
+    <div id="health">Üs Sağlığı: 100</div>
+    <div id="gold">Altın: 200</div>
   </div>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-  <div id="settingsMenu" class="menu hidden">
-    <h2>Ayarlar</h2>
-    <label>
-      Ses:
-      <input type="range" id="volumeSlider" min="0" max="100" value="70" />
-    </label><br />
-    <label>
-      Kalite:
-      <select id="qualitySelect">
-        <option value="high">Yüksek</option>
-        <option value="medium">Orta</option>
-        <option value="low">Düşük</option>
-      </select>
-    </label><br />
-    <button onclick="backToMain()">Geri</button>
-  </div>
+    let gameLevel = 1;
+    let enemies = [];
+    let towers = [];
+    let baseHealth = 100;
+    let gold = 200;
 
-  <div id="aboutMenu" class="menu hidden">
-    <h2>Oyun Bilgisi</h2>
-    <p>Bu oyun, Guard: Advanced TDM adında mobil uyumlu bir kule savunma oyunudur.</p>
-    <button onclick="backToMain()">Geri</button>
-  </div>
+    class Enemy {
+      constructor(x, y, speed, health) {
+        this.x = x;
+        this.y = y;
+        this.speed = speed;
+        this.health = health;
+        this.alive = true;
+      }
+      update() {
+        this.x -= this.speed;
+        if (this.x < 50) {
+          baseHealth -= 10;
+          this.alive = false;
+        }
+      }
+      draw() {
+        ctx.fillStyle = "crimson";
+        ctx.fillRect(this.x, this.y, 30, 30);
+        ctx.fillStyle = "white";
+        ctx.fillText("Lv " + gameLevel, this.x, this.y - 5);
+      }
+    }
 
-  <canvas id="gameCanvas" class="hidden"></canvas>
+    class Tower {
+      constructor(x, y, range, damage) {
+        this.x = x;
+        this.y = y;
+        this.range = range;
+        this.damage = damage;
+        this.cooldown = 0;
+      }
+      update() {
+        if (this.cooldown > 0) this.cooldown--;
+        for (let enemy of enemies) {
+          const dx = enemy.x - this.x;
+          const dy = enemy.y - this.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < this.range && this.cooldown === 0) {
+            enemy.health -= this.damage;
+            this.cooldown = 30;
+            if (enemy.health <= 0) {
+              enemy.alive = false;
+              gold += 10;
+            }
+            break;
+          }
+        }
+      }
+      draw() {
+        ctx.fillStyle = "royalblue";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
 
-  <script src="src/game.js"></script>
+    function spawnEnemies() {
+      for (let i = 0; i < gameLevel + 2; i++) {
+        const y = Math.random() * (canvas.height - 50);
+        enemies.push(new Enemy(canvas.width, y, 1 + gameLevel * 0.2, 40 + gameLevel * 10));
+      }
+    }
+
+    function updateGame() {
+      enemies = enemies.filter(e => e.alive);
+      for (let enemy of enemies) enemy.update();
+      for (let tower of towers) tower.update();
+
+      if (enemies.length === 0) {
+        gameLevel++;
+        spawnEnemies();
+      }
+
+      document.getElementById("level").innerText = "Seviye: " + gameLevel;
+      document.getElementById("health").innerText = "Üs Sağlığı: " + baseHealth;
+      document.getElementById("gold").innerText = "Altın: " + gold;
+    }
+
+    function drawGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let enemy of enemies) enemy.draw();
+      for (let tower of towers) tower.draw();
+
+      if (baseHealth <= 0) {
+        ctx.fillStyle = "white";
+        ctx.font = "bold 36px sans-serif";
+        ctx.fillText("Oyun Bitti!", canvas.width / 2 - 100, canvas.height / 2);
+      }
+    }
+
+    canvas.addEventListener("click", function (e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      if (gold >= 50) {
+        towers.push(new Tower(x, y, 150, 15));
+        gold -= 50;
+      }
+    });
+
+    function gameLoop() {
+      updateGame();
+      drawGame();
+      if (baseHealth > 0) requestAnimationFrame(gameLoop);
+    }
+
+    spawnEnemies();
+    gameLoop();
+  </script>
 </body>
 </html>
