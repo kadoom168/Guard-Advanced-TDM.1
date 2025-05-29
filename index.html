@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guard: Advanced TDM</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+  <div id="mainMenu" class="menu">
+    <h1>Guard: Advanced TDM</h1>
+    <button onclick="startGame()">Yeni Oyun</button>
+    <button onclick="toggleSettings()">Ayarlar</button>
+    <button onclick="toggleAbout()">Hakkında</button>
+  </div>
+
+  <div id="settingsMenu" class="menu hidden">
+    <h2>Ayarlar</h2>
+    <label>
+      Ses:
+      <input type="range" id="volumeSlider" min="0" max="100" value="70" />
+    </label><br />
+    <label>
+      Kalite:
+      <select id="qualitySelect">
+        <option value="high">Yüksek</option>
+        <option value="medium">Orta</option>
+        <option value="low">Düşük</option>
+      </select>
+    </label><br />
+    <button onclick="backToMain()">Geri</button>
+  </div>
+
+  <div id="aboutMenu" class="menu hidden">
+    <h2>Oyun Bilgisi</h2>
+    <p>Bu oyun, Guard: Advanced TDM adında mobil uyumlu bir kule savunma oyunudur.</p>
+    <button onclick="backToMain()">Geri</button>
+  </div>
+
+  <canvas id="gameCanvas" class="hidden"></canvas>
+
+  <script src="src/game.js"></script>
+</body>
+</html>
