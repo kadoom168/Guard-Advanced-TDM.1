@@ -3,7 +3,9 @@ const ctx = canvas.getContext("2d");
 
 canvas.width = window.innerWidth * 0.95;
 canvas.height = window.innerHeight * 0.75;
-
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
 let gameState = "menu"; // menu, playing, paused, gameover
 let towers = [];
 let enemies = [];
@@ -68,6 +70,7 @@ function update(dt) {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+ctx.font = "24px Arial";
 
   // Üs
   ctx.fillStyle = "darkred";
@@ -127,6 +130,18 @@ function backToMain() {
 // Oyun alanına tıklayınca kule yerleştirme
 
 canvas.addEventListener("click", e => {
+  canvas.addEventListener("touchstart", function(e) {
+  e.preventDefault();
+  if (gold >= 50) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    towers.push(new Tower(x, y, 100, 10));
+    gold -= 50;
+  }
+}, { passive: false });
+
   if(gameState !== "playing") return;
   if(gold < 50) return;
 
